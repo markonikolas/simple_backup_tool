@@ -1,18 +1,36 @@
 #!/bin/bash
 # This script backs up all important folders
-
-# Set timestamp for current backup session
+# by n1c01ash
+  
+# Set timestamp for current backup session.
 timestamp=$(date +%F)
-dest_folder="$1Backup_$timestamp"
 
-[ $# -eq 0 ] && echo "No arguments supplied" && exit 1
+# Set src and dest folders.
+src_folders="${@:1:$(($#-1))}"
+dest_folder="${@: -1}/Backup_$timestamp"
+
+# Check if arguemts are supplied.
+[ $# -eq 0 ] && echo "No arguments supplied!" && exit 1
+[ -z "$src_folders" ] && echo "No source folders supplied!" && exit 1
 [ -z "$dest_folder" ] && echo "No destination folder supplied!" && exit 1
 
-echo 'Starting backup, be patient...' && sleep 1 && echo Created directory $dest_folder... && \
-	sleep 1 && echo Copying /opt, /home, /usr, and /etc to $dest_folder... && sleep 2 && \
-	sudo rsync -rlptgoDvz --delete --exclude={Cache,.cache,CachedData,Trash} /home $dest_folder && \
-	sudo rsync -rlptgoDvz --delete --exclude={Cache,.cache,CachedData,Trash} /usr $dest_folder && \
-	sudo rsync -rlptgoDvz --delete --exclude={cache,.cache,cacheddata,trash} /opt $dest_folder && \
-	sudo rsync -rlptgoDvz --delete --exclude={cache,.cache,cacheddata,trash} /etc $dest_folder && \
-	echo 'Backup completed successfuly.'
+function copy() {
+I echo Starting backup, be patient... && \
+       sleep 1 && \
+       echo Creating directory $dest_folder... && mkdir -p $dest_folder && \
+       sleep 1 && \
+       echo Backing up $src_folders to $dest_folder... 
+
+       for folder in $src_folders; do
+           echo Copying $folder to $dest_folder... && sleep 2 && \
+	   sudo rsync -rlptgoDvz --delete --exclude={Cache,.cache,CachedData,Trash} --human-readable $folder $dest_folder 
+  	   echo $folder copied successfuly.
+       done
+	
+    echo 'Backup completed successfuly.'
+    exit
+}
+
+echo Are you sure you want to continue? [y/N] && read answer
+[[ "$answer" == [Yy]* ]] && copy && echo Wise choice || echo Like you have something better to do. && exit
 
